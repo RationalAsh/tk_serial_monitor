@@ -150,6 +150,7 @@ if __name__=="__main__":
     #Create the main application
     root = Tk.Tk()
     root.title("Serial Port Monitor")
+    root.tk.call('wm', 'iconphoto', root._w, Tk.PhotoImage(file='if_port.png'))
     root.rowconfigure(0, weight=1)
     root.columnconfigure(0, weight=1)
     app_frame = main_app(root, width=500, height=500)
@@ -189,3 +190,7 @@ if __name__=="__main__":
               .subscribe(app_frame.send_serial)
 
     root.mainloop()
+    try:
+        app_frame.SERIAL_DEVICE.close()
+    except:
+        pass
