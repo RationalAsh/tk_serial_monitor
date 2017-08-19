@@ -1,8 +1,11 @@
 from rx.subjects import Subject
 from rx.concurrency import TkinterScheduler
+from rx import Observable
 import tkinter as Tk
-from tkinter import ttk, N, E, W, S
+from tkinter import ttk, N, E, W, S, filedialog
 import serial
+from serial.tools import list_ports
+import time
 
 class main_app(Tk.Frame):
     """
@@ -14,8 +17,11 @@ class main_app(Tk.Frame):
         Tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
 
-        #Setup some observers
+        #Setup the scheduler
+        self.scheduler = TkinterScheduler(parent)
+        #Setup some observables
         self.rx_event_observer = Subject()
+        self.time_observer = Observable.interval(1000).observe_on(self.scheduler)
 
         #Build the GUI here
         #Scrollbar for the text widget
@@ -70,7 +76,31 @@ class main_app(Tk.Frame):
         self.serial_send_entry.grid(row=3, column=0, columnspan=5, padx=5, pady=5, sticky=(N, E, W, S))
         self.serial_send_entry.bind("<Return>", lambda ev: self.rx_event_observer.on_next(ev))
 
+    def update_comports(self, val):
+        """
+        Updates the list of detected COM Ports in the combobox
+        """
+        available_ports = [p.device for p in list_ports.comports()]
+        self.serial_port_combobox['values'] = available_ports
+        #print("Available ports: {}".format(available_ports))
+
+    def save_stream_as_file(self):
+        """
+        Saves whatever's in the stream as a file
+        """
+        filetypelist = [("Text file", '.txt'), ("Comma Separated Values", '.csv')]
+        default_filename = time.strftime('LOG_%Y_%m_%d_%H_%M_%S')
+        f = filedialog.asksaveasfile(title="Save data as file", mode='w', defaultextension=".txt",
+                                     parent=self, filetypes=filetypelist, initialfile=default_filename)
+        if f is None:
+            return
+        text2save = str(serial_stream_display.get(1.0, Tk.END))
+        f.write(text2save)
+        f.close()
+
+
 if __name__=="__main__":
+    #Create the main application
     root = Tk.Tk()
     root.title("Serial Port Monitor")
     root.rowconfigure(0, weight=1)
@@ -79,5 +109,19 @@ if __name__=="__main__":
     app_frame.grid(row=0, column=0, sticky=(N, E, W, S))
     app_frame.rowconfigure(0, weight=1)
     app_frame.columnconfigure(0, weight=1)
-    app_frame.rx_event_observer.subscribe(lambda ev: print("{} {}".format(ev.type, ev.widget)))
+
+    #Setup the application logic using RxPy
+    app_frame.rx_event_observer.subscribe_on(scheduler=app_frame.scheduler)\
+             .subscribe(lambda ev: print("{} {}".format(ev.type, ev.widget)))
+    #Update the combobox with new serial ports
+    app_frame.time_observer.subscribe(app_frame.update_comports)
+    #Clear screen if clear is pressed
+    app_frame.rx_event_observer.filter(lambda ev: int(ev.type)==5)\
+                               .filter(lambda ev: ev.widget['text'].lower() == 'clear')\
+                               .subscribe(lambda ev: app_frame.serial_stream_display.delete('1.0', Tk.END))
+    #Open dialog to save file if the save button is pressed
+    app_frame.rx_event_observer.filter(lambda ev: int(ev.type)==5)\
+                               .filter(lambda ev: ev.widget['text'].lower() == 'save')\
+                               .subscribe(lambda ev: app_frame.save_stream_as_file())
+
     root.mainloop()
