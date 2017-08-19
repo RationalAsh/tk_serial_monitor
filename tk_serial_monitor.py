@@ -14,6 +14,9 @@ class main_app(Tk.Frame):
         Tk.Frame.__init__(self, parent, *args, **kwargs)
         self.parent = parent
 
+        #Setup some observers
+        self.rx_event_observer = Subject()
+
         #Build the GUI here
         #Scrollbar for the text widget
         self.serial_stream_display_sb = ttk.Scrollbar(self)
@@ -42,7 +45,9 @@ class main_app(Tk.Frame):
 
         #Buttons for clearing screen and saving data
         self.save_button = ttk.Button(self, text="Save")
+        self.save_button.bind("<ButtonRelease-1>", lambda ev: self.rx_event_observer.on_next(ev))
         self.clear_button = ttk.Button(self, text="Clear")
+        self.clear_button.bind("<ButtonRelease-1>", lambda ev: self.rx_event_observer.on_next(ev))
         self.save_button.grid(row=1, column=5, padx=5, pady=5, sticky=(N, E, W, S))
         self.clear_button.grid(row=1, column=6, padx=5, pady=5, sticky=(N, E, W, S))
 
@@ -62,6 +67,7 @@ class main_app(Tk.Frame):
         self.serial_send_text = Tk.StringVar()
         self.serial_send_entry = ttk.Entry(self, textvariable=self.serial_send_text)
         self.serial_send_entry.grid(row=3, column=0, columnspan=5, padx=5, pady=5, sticky=(N, E, W, S))
+        self.serial_send_entry.bind("<Return>", lambda ev: self.rx_event_observer.on_next(ev))
 
 if __name__=="__main__":
     root = Tk.Tk()
