@@ -2,7 +2,7 @@ from rx.subjects import Subject
 from rx.concurrency import TkinterScheduler
 import tkinter as Tk
 from tkinter import ttk, N, E, W, S
-#import serial
+import serial
 
 class main_app(Tk.Frame):
     """
@@ -57,6 +57,7 @@ class main_app(Tk.Frame):
         self.serial_port_label = ttk.Label(self, text="Select Serial Port:")
         self.serial_baud_label = ttk.Label(self, text="Baud Rate:")
         self.serial_port_combobox = ttk.Combobox(self, textvariable=self.serial_port_name, width=20)
+        self.serial_port_combobox.bind("<<ComboboxSelected>>", lambda ev: self.rx_event_observer.on_next(ev))
         self.serial_baud_combobox = ttk.Combobox(self, textvariable=self.serial_baud_value, width=20)
         self.serial_port_label.grid(row=1, column=1, padx=5, pady=5, sticky=(E,N,S))
         self.serial_port_combobox.grid(row=1, column=2, padx=5, pady=5, sticky=(N, E, W, S))
@@ -78,4 +79,5 @@ if __name__=="__main__":
     app_frame.grid(row=0, column=0, sticky=(N, E, W, S))
     app_frame.rowconfigure(0, weight=1)
     app_frame.columnconfigure(0, weight=1)
+    app_frame.rx_event_observer.subscribe(lambda ev: print("{} {}".format(ev.type, ev.widget)))
     root.mainloop()
