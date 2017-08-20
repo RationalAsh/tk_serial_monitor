@@ -1,0 +1,10 @@
+setup.py
+pySerialMonitor/__init__.py
+pySerialMonitor/serial_monitor.py
+pySerialMonitor.egg-info/PKG-INFO
+pySerialMonitor.egg-info/SOURCES.txt
+pySerialMonitor.egg-info/dependency_links.txt
+pySerialMonitor.egg-info/entry_points.txt
+pySerialMonitor.egg-info/not-zip-safe
+pySerialMonitor.egg-info/requires.txt
+pySerialMonitor.egg-info/top_level.txt
